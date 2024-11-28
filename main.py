@@ -202,10 +202,9 @@ def seleccionar_cuit_representado(cuit_representado):
     # Esperar que el popup esté visible y hacer clic en el botón de cerrar por XPATH
     try:
     # Usamos el XPATH para localizar el botón de cerrar
-        close_button = WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable((By.XPATH, '//a[@href="#close" and @title="Cerrar"]'))
-        )
-        close_button.click()
+        xpath_popup = "/html/body/div[2]/div[2]/div/div/a"
+        element_popup = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, xpath_popup)))
+        element_popup.click()
         print("Popup cerrado exitosamente.")
     except Exception as e:
         print(f"Error al intentar cerrar el popup: {e}")
@@ -256,30 +255,18 @@ def extraer_datos_nuevo(cuit_ingresar, cuit_representado, password, ubicacion_de
             # Esperar que el popup esté visible y hacer clic en el botón de cerrar por XPATH
             try:
                 # Usamos el XPATH para localizar el botón de cerrar
-                close_button = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, '//a[@href="#close" and @title="Cerrar"]'))
-                )
-                close_button.click()
+                xpath_popup = "/html/body/div[2]/div[2]/div/div/a"
+                element_popup = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, xpath_popup)))
+                element_popup.click()
                 print("Popup cerrado exitosamente.")
             except Exception as e:
                 print(f"Error al intentar cerrar el popup: {e}")
             if seleccionar_cuit_representado(cuit_representado):    
                 exportar_excel(ubicacion_descarga, cuit_representado, cliente)    
-                if posterior == 0:
-                    print("Cerrando sesión")
-                    cerrar_sesion()
-    except Exception as e:
-        print(f"Error al extraer datos para el nuevo usuario: {e}")
-
-def extraer_datos(cuit_representado, ubicacion_descarga, posterior, cliente):
-    """Extrae datos para un usuario existente."""
-    try:
-        if seleccionar_cuit_representado(cuit_representado):
-            exportar_excel(ubicacion_descarga, cuit_representado, cliente)
-            if posterior == 0:
+                print("Cerrando sesión")
                 cerrar_sesion()
     except Exception as e:
-        print(f"Error al extraer datos: {e}")
+        print(f"Error al extraer datos para el nuevo usuario: {e}")
 
 # Función para convertir Excel a CSV utilizando xlwings
 def excel_a_csv(input_folder, output_folder):
@@ -325,10 +312,7 @@ for cuit_ingresar, cuit_representado, password, download, posterior, anterior, c
     cuit_ingresar_normalizado = normalizar_cuit(cuit_ingresar)
     cuit_representado_normalizado = normalizar_cuit(cuit_representado)
 
-    if anterior == 0:
-        extraer_datos_nuevo(cuit_ingresar_normalizado, cuit_representado_normalizado, password, download, posterior, cliente, indice)
-    else:
-        extraer_datos(cuit_representado_normalizado, download, posterior, cliente)
+    extraer_datos_nuevo(cuit_ingresar_normalizado, cuit_representado_normalizado, password, download, posterior, cliente, indice)
     
     indice += 1
 
