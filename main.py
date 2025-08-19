@@ -8,7 +8,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 from openpyxl import Workbook, load_workbook
 import pandas as pd
 import time
-import pyautogui
 import os
 import glob
 import random
@@ -87,14 +86,14 @@ def cerrar_sesion_y_navegador():
                     driver.switch_to.window(window_handles[i])
                     print(f"🗂️ Cerrando pestaña {i + 1}: {driver.title[:50]}...")
                     driver.close()
-                    time.sleep(2)
+                    time.sleep(1)
                 except Exception as e:
                     print(f"⚠️ Error cerrando pestaña {i + 1}: {e}")
             
             # Volver a la pestaña principal (índice 0)
             driver.switch_to.window(window_handles[0])
             print("✅ Vuelto a la pestaña principal")
-            time.sleep(2)
+            time.sleep(1)
         
         # PASO 3: Intentar cerrar sesión en AFIP desde la pestaña principal
         try:
@@ -103,12 +102,12 @@ def cerrar_sesion_y_navegador():
             # Buscar el icono de contribuyente AFIP
             icono_contribuyente = driver.find_element(By.ID, "iconoChicoContribuyenteAFIP")
             icono_contribuyente.click()
-            time.sleep(2)
+            time.sleep(1)
             
             # Buscar y hacer clic en el botón de salir
             boton_salir = driver.find_element(By.XPATH, '//*[@id="contBtnContribuyente"]/div[6]/button/div/div[2]')
             boton_salir.click()
-            time.sleep(3)
+            time.sleep(2)
             
             print("✅ Sesión cerrada exitosamente en AFIP")
             
@@ -139,7 +138,7 @@ resultados = []
 def human_typing(element, text):
     for char in str(text):
         element.send_keys(char)
-        time.sleep(random.uniform(0.01, 0.07))
+        time.sleep(random.uniform(0.01, 0.03))
 
 def actualizar_excel(row_index, mensaje):
     """Actualiza la última columna del archivo Excel con un mensaje de error."""
@@ -203,11 +202,11 @@ def iniciar_sesion(cuit_ingresar, password, row_index):
         driver.get('https://auth.afip.gob.ar/contribuyente_/login.xhtml')
         element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'F1:username')))
         element.clear()
-        time.sleep(3)
+        time.sleep(2)
 
         human_typing(element, cuit_ingresar)
         driver.find_element(By.ID, 'F1:btnSiguiente').click()
-        time.sleep(3)
+        time.sleep(2)
 
         # Verificar si el CUIT es incorrecto
         try:
@@ -220,9 +219,9 @@ def iniciar_sesion(cuit_ingresar, password, row_index):
 
         element_pass = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'F1:password')))
         human_typing(element_pass, password)
-        time.sleep(4)
-        driver.find_element(By.ID, 'F1:btnIngresar').click()
         time.sleep(3)
+        driver.find_element(By.ID, 'F1:btnIngresar').click()
+        time.sleep(2)
 
         # Verificar si la contraseña es incorrecta
         try:
@@ -246,19 +245,19 @@ def ingresar_modulo(cuit_ingresar, password, row_index):
     boton_ver_todos = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.LINK_TEXT, "Ver todos")))
     if boton_ver_todos:
         boton_ver_todos.click()
-        time.sleep(3)
+        time.sleep(2)
 
     # Buscar input del buscador y escribir
     buscador = driver.find_element(By.ID, 'buscadorInput')
     if buscador:
         human_typing(buscador, 'tas tr') 
-        time.sleep(3)
+        time.sleep(2)
 
     # Seleccionar la opción del menú
     opcion_menu = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'rbt-menu-item-0')))
     if opcion_menu:
         opcion_menu.click()
-        time.sleep(3)
+        time.sleep(2)
 
     # Manejar modal si aparece
     modales = driver.find_elements(By.CLASS_NAME, 'modal-content')
@@ -266,7 +265,7 @@ def ingresar_modulo(cuit_ingresar, password, row_index):
         boton_continuar = driver.find_element(By.XPATH, '//button[text()="Continuar"]')
         if boton_continuar:
             boton_continuar.click()
-            time.sleep(3)
+            time.sleep(2)
 
     # Cambiar a la última pestaña abierta
     driver.switch_to.window(driver.window_handles[-1])
@@ -276,23 +275,23 @@ def ingresar_modulo(cuit_ingresar, password, row_index):
     if error_message_elements and error_message_elements[0].text == "Ha ocurrido un error al autenticar, intente nuevamente.":
         actualizar_excel(row_index, "Error autenticacion")
         driver.refresh()
-        time.sleep(3)
+        time.sleep(2)
 
     # Verificar si es necesario iniciar sesión nuevamente
     username_input = driver.find_elements(By.ID, 'F1:username')
     if username_input:
         username_input[0].clear()
-        time.sleep(3)
+        time.sleep(2)
         human_typing(username_input[0], cuit_ingresar)
         driver.find_element(By.ID, 'F1:btnSiguiente').click()
-        time.sleep(3)
+        time.sleep(2)
 
         password_input = driver.find_elements(By.ID, 'F1:password')
         if password_input:
             human_typing(password_input[0], password)
-            time.sleep(3)
-            driver.find_element(By.ID, 'F1:btnIngresar').click()
             time.sleep(2)
+            driver.find_element(By.ID, 'F1:btnIngresar').click()
+            time.sleep(1)
             actualizar_excel(row_index, "Error volver a iniciar sesion")
 
 def seleccionar_cuit_representado(cuit_representado):
@@ -330,8 +329,8 @@ def configurar_select_100_mejorado(driver):
     
     try:
         # Esperar inicial
-        time.sleep(2)
-        print("✓ Esperando 2 segundos antes de configurar select...")
+        time.sleep(1)
+        print("✓ Esperando 1 segundos antes de configurar select...")
         
         # ESTRATEGIA 1: Buscar el select con múltiples selectores
         select_element = None
@@ -368,7 +367,7 @@ def configurar_select_100_mejorado(driver):
         
         if not select_element:
             print("✗ No se encontró ningún select, continuando sin cambio...")
-            time.sleep(2)
+            time.sleep(1)
             return False
         
         # ESTRATEGIA 2: Analizar el select encontrado
@@ -376,7 +375,7 @@ def configurar_select_100_mejorado(driver):
         
         # Hacer scroll al elemento
         driver.execute_script("arguments[0].scrollIntoView(true);", select_element)
-        time.sleep(2)
+        time.sleep(1)
         
         # Obtener información del select
         current_value = select_element.get_attribute('value')
@@ -406,7 +405,7 @@ def configurar_select_100_mejorado(driver):
         # Verificar si ya está en 100
         if current_value == "100":
             print("✓ Select ya está configurado en 100")
-            time.sleep(2)
+            time.sleep(1)
             return True
         
         # ESTRATEGIA 4: Buscar la opción 100
@@ -438,7 +437,7 @@ def configurar_select_100_mejorado(driver):
                         break
             else:
                 print("✗ No se encontraron opciones válidas")
-                time.sleep(2)
+                time.sleep(1)
                 return False
         else:
             target_value = "100"
@@ -455,7 +454,7 @@ def configurar_select_100_mejorado(driver):
                 from selenium.webdriver.support.ui import Select
                 select_obj = Select(select_element)
                 select_obj.select_by_index(target_index)
-                time.sleep(2)
+                time.sleep(1)
                 
                 new_value = select_element.get_attribute('value')
                 if new_value == target_value:
@@ -470,7 +469,7 @@ def configurar_select_100_mejorado(driver):
         # ESTRATEGIA 6: Verificación visual y de DOM
         if exito_cambio:
             print(f"\n--- VERIFICANDO CAMBIO ---")
-            time.sleep(2)
+            time.sleep(1)
             
             # Verificar valor del select
             valor_final = select_element.get_attribute('value')
@@ -505,14 +504,14 @@ def configurar_select_100_mejorado(driver):
                 print(f"No se pudo contar filas visibles: {e}")
         
         # Esperar antes de continuar
-        print("✓ Esperando 3 segundos antes de extraer datos...")
-        time.sleep(3)
+        print("✓ Esperando 2 segundos antes de extraer datos...")
+        time.sleep(2)
         
         return exito_cambio
         
     except Exception as e:
         print(f"✗ Error general configurando select: {e}")
-        time.sleep(2)
+        time.sleep(1)
         return False
 
 def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
@@ -524,7 +523,7 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
         print(f"Título de la página: {driver.title}")
         
         # Esperar a que la página se cargue completamente
-        time.sleep(4)
+        time.sleep(3)
         # PASO 1: Verificar si hay iframe y cambiar a él
         print(f"\n--- VERIFICANDO Y CAMBIANDO AL IFRAME ---")
         
@@ -544,7 +543,7 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
             print("✓ Cambiado al iframe exitosamente")
             
             # Esperar a que el contenido del iframe se cargue COMPLETAMENTE
-            time.sleep(4)  # Aumentar tiempo de espera
+            time.sleep(3)  # Aumentar tiempo de espera
             
             # Esperar a que Vue.js termine de renderizar
             WebDriverWait(driver, 20).until(
@@ -722,12 +721,12 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
             try:
                 # Hacer scroll al elemento para asegurar que esté visible
                 driver.execute_script("arguments[0].scrollIntoView(true);", elemento_deudas)
-                time.sleep(3)
+                time.sleep(2)
                 
                 # Intentar clic normal primero
                 elemento_deudas.click()
                 print("✓ Clic normal en '$ Deudas' realizado")
-                time.sleep(4)  # Esperar más tiempo para que cargue la tabla
+                time.sleep(3)  # Esperar más tiempo para que cargue la tabla
 
                 # USAR LA FUNCIÓN MEJORADA PARA CONFIGURAR SELECT
                 exito_select = configurar_select_100_mejorado(driver)
@@ -740,7 +739,7 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
                     # Intentar clic con JavaScript
                     driver.execute_script("arguments[0].click();", elemento_deudas)
                     print("✓ Clic con JavaScript realizado")
-                    time.sleep(4)
+                    time.sleep(3)
                 except Exception as e2:
                     print(f"Error en clic JavaScript: {e2}")
                     
@@ -754,8 +753,8 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
 
             try:
                 # Esperar 4 segundos antes de empezar a configurar
-                time.sleep(3)
-                print("✓ Esperando 4 segundos antes de configurar select...")
+                time.sleep(2)
+                print("✓ Esperando 2 segundos antes de configurar select...")
                 
                 # Esperar a que el select esté presente
                 WebDriverWait(driver, 15).until(
@@ -834,8 +833,8 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
                                     print("⚠ No se pudo cambiar el select, continuando...")
                     
                     # Esperar a que la tabla se actualice después del cambio
-                    time.sleep(4)
-                    print("✓ Esperando 4 segundos para que la tabla se actualice...")
+                    time.sleep(3)
+                    print("✓ Esperando 3 segundos para que la tabla se actualice...")
                     
                     # Verificar el cambio
                     try:
@@ -921,8 +920,8 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
                 
                 # Período: 2025
                 # Vencimiento: entre 01/06/2025 y 21/07/2025
-                fecha_vencimiento_inicio = datetime(2025, 6, 1).date()
-                fecha_vencimiento_fin = datetime(2025, 7, 21).date()
+                fecha_vencimiento_inicio = datetime(2025, 8, 1).date()
+                fecha_vencimiento_fin = datetime(2025, 8, 19).date()
                 
                 print(f"Filtro de período: 2025")
                 print(f"Filtro de vencimiento: desde {fecha_vencimiento_inicio} hasta {fecha_vencimiento_fin}")
