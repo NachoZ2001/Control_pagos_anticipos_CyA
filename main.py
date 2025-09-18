@@ -919,9 +919,9 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
                 print(f"Filtros de impuestos para anticipos: {impuestos_incluir}")
                 
                 # Período: 2025
-                # Vencimiento: entre 01/06/2025 y 21/07/2025
-                fecha_vencimiento_inicio = datetime(2025, 8, 1).date()
-                fecha_vencimiento_fin = datetime(2025, 8, 19).date()
+                # Vencimiento: entre 01/09/2025 y 19/09/2025
+                fecha_vencimiento_inicio = datetime(2025, 9, 1).date()
+                fecha_vencimiento_fin = datetime(2025, 9, 19).date()
                 
                 print(f"Filtro de período: 2025")
                 print(f"Filtro de vencimiento: desde {fecha_vencimiento_inicio} hasta {fecha_vencimiento_fin}")
@@ -1025,7 +1025,7 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
                                         # Parsear fecha formato dd/mm/yyyy
                                         fecha_vencimiento = datetime.strptime(fecha_vencimiento_texto, "%d/%m/%Y").date()
                                         
-                                        # Verificar si está en el rango junio 2025
+                                        # Verificar si está en el rango {mes} 2025
                                         if fecha_vencimiento_inicio <= fecha_vencimiento <= fecha_vencimiento_fin:
                                             fecha_vencida_valida = True
                                             print(f"  ✓ Fecha de vencimiento válida para anticipos: {fecha_vencimiento}")
@@ -1283,7 +1283,7 @@ print("=" * 60)
 
 # MODIFICACIÓN: Bucle principal para procesar anticipos
 print("🚀 INICIANDO PROCESAMIENTO DE CLIENTES PARA ANTICIPOS")
-print("📋 MODO: Extracción de Ganancias Sociedades - Período 2025 - Vencimiento Junio 2025")
+print("📋 MODO: Extracción de Ganancias Sociedades - Período 2025 - Vencimiento Septiembre 2025")
 
 # Crear directorio de salida si no existe
 for ubicacion in download_list:
@@ -1321,7 +1321,7 @@ print("✅ PROCESAMIENTO DE TODOS LOS CLIENTES COMPLETADO")
 print("📊 RESUMEN DE ANTICIPOS:")
 print("   - Impuesto filtrado: Ganancias Sociedades")
 print("   - Período filtrado: 2025")
-print("   - Vencimiento filtrado: 01/06/2025 a 30/06/2025")
+print("   - Vencimiento filtrado: 01/09/2025 a 30/09/2025")
 print("   - Formato de salida: Excel (.xlsx)")
 print("   - Título de archivos: Anticipos - [Cliente]")
 print("="*60)
