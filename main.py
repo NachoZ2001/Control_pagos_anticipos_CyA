@@ -920,8 +920,8 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
                 
                 # Período: 2025
                 # Vencimiento: entre 01/09/2025 y 19/09/2025
-                fecha_vencimiento_inicio = datetime(2025, 9, 1).date()
-                fecha_vencimiento_fin = datetime(2025, 9, 19).date()
+                fecha_vencimiento_inicio = datetime(2025, 11, 1).date()
+                fecha_vencimiento_fin = datetime(2025, 11, 19).date()
                 
                 print(f"Filtro de período: 2025")
                 print(f"Filtro de vencimiento: desde {fecha_vencimiento_inicio} hasta {fecha_vencimiento_fin}")
