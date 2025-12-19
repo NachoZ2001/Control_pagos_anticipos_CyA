@@ -912,16 +912,14 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
 
                 # MODIFICACIÓN: FILTROS ESPECÍFICOS PARA ANTICIPOS
                 # Solo Ganancias Sociedades
-                impuestos_incluir = [
-                    'ganancias sociedades'
-                ]
+                impuestos_incluir = ['ganancias sociedades']
                 
                 print(f"Filtros de impuestos para anticipos: {impuestos_incluir}")
                 
                 # Período: 2025
-                # Vencimiento: entre 01/09/2025 y 19/09/2025
-                fecha_vencimiento_inicio = datetime(2025, 11, 1).date()
-                fecha_vencimiento_fin = datetime(2025, 11, 19).date()
+                # Vencimiento: entre 01/12/2025 y 19/12/2025
+                fecha_vencimiento_inicio = datetime(2025, 12, 1).date()
+                fecha_vencimiento_fin = datetime(2025, 12, 19).date()
                 
                 print(f"Filtro de período: 2025")
                 print(f"Filtro de vencimiento: desde {fecha_vencimiento_inicio} hasta {fecha_vencimiento_fin}")
@@ -1010,13 +1008,13 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
                                 
                                 # FILTRO 2: Verificar período (debe ser 2025)
                                 periodo_texto = datos_fila_completa.get('Período', '')
-                                periodo_valido = '2025' in periodo_texto
+                                periodo_valido = '2026' in periodo_texto
                                 
                                 if not periodo_valido:
                                     print(f"  ✗ Fila {i+1} descartada: período no es 2025 ('{periodo_texto}')")
                                     continue
                                 
-                                # FILTRO 3: Verificar fecha de vencimiento (debe estar entre 01/06/2025 y 30/06/2025)
+                                # FILTRO 3: Verificar fecha de vencimiento (debe estar entre 01/12/2025 y 19/12/2025)
                                 fecha_vencimiento_texto = datos_fila_completa.get('Vencimiento', '')
                                 fecha_vencida_valida = False
                                 
@@ -1030,7 +1028,7 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
                                             fecha_vencida_valida = True
                                             print(f"  ✓ Fecha de vencimiento válida para anticipos: {fecha_vencimiento}")
                                         else:
-                                            print(f"  ✗ Fecha fuera del rango junio 2025: {fecha_vencimiento}")
+                                            print(f"  ✗ Fecha fuera del rango diciembre 2025: {fecha_vencimiento}")
                                             continue
                                             
                                     except ValueError:
@@ -1283,7 +1281,7 @@ print("=" * 60)
 
 # MODIFICACIÓN: Bucle principal para procesar anticipos
 print("🚀 INICIANDO PROCESAMIENTO DE CLIENTES PARA ANTICIPOS")
-print("📋 MODO: Extracción de Ganancias Sociedades - Período 2025 - Vencimiento Septiembre 2025")
+print("📋 MODO: Extracción de Ganancias Sociedades - Período 2025 - Vencimiento Diciembre 2025")
 
 # Crear directorio de salida si no existe
 for ubicacion in download_list:
@@ -1321,7 +1319,7 @@ print("✅ PROCESAMIENTO DE TODOS LOS CLIENTES COMPLETADO")
 print("📊 RESUMEN DE ANTICIPOS:")
 print("   - Impuesto filtrado: Ganancias Sociedades")
 print("   - Período filtrado: 2025")
-print("   - Vencimiento filtrado: 01/09/2025 a 30/09/2025")
+print("   - Vencimiento filtrado: 01/12/2025 a 19/12/2025")
 print("   - Formato de salida: Excel (.xlsx)")
 print("   - Título de archivos: Anticipos - [Cliente]")
 print("="*60)
