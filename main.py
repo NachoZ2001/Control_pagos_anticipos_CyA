@@ -129,7 +129,6 @@ def cerrar_sesion_y_navegador():
                 driver = None
         except:
             pass
-    
     print("--- CIERRE COMPLETO FINALIZADO ---\n")
 
 # Crear el archivo de resultados
@@ -138,7 +137,7 @@ resultados = []
 def human_typing(element, text):
     for char in str(text):
         element.send_keys(char)
-        time.sleep(random.uniform(0.01, 0.03))
+        time.sleep(random.uniform(0.01, 0.02))
 
 def actualizar_excel(row_index, mensaje):
     """Actualiza la última columna del archivo Excel con un mensaje de error."""
@@ -146,9 +145,6 @@ def actualizar_excel(row_index, mensaje):
     df.to_excel(input_excel_clientes, index=False)
 
 def verificar_columnas_finales(df, cliente):
-    """
-    Verifica que solo estén las columnas correctas antes de generar Excel.
-    """
     print(f"\n--- VERIFICANDO COLUMNAS FINALES PARA {cliente} ---")
     
     columnas_esperadas = ['Impuesto', 'Período', 'Ant/Cuota', 'Vencimiento', 'Saldo', 'Int. Resarcitorios']
@@ -239,8 +235,6 @@ def iniciar_sesion(cuit_ingresar, password, row_index):
         return False
 
 def ingresar_modulo(cuit_ingresar, password, row_index):
-    """Ingresa al módulo específico del sistema de cuentas tributarias."""
-
     # Verificar si el botón "Ver todos" está presente y hacer clic
     boton_ver_todos = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.LINK_TEXT, "Ver todos")))
     if boton_ver_todos:
@@ -295,7 +289,6 @@ def ingresar_modulo(cuit_ingresar, password, row_index):
             actualizar_excel(row_index, "Error volver a iniciar sesion")
 
 def seleccionar_cuit_representado(cuit_representado):
-    """Selecciona el CUIT representado en el sistema."""
     try:
         select_present = EC.presence_of_element_located((By.NAME, "$PropertySelection"))
         if WebDriverWait(driver, 5).until(select_present):
@@ -917,9 +910,9 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
                 print(f"Filtros de impuestos para anticipos: {impuestos_incluir}")
                 
                 # Período: 2026
-                # Vencimiento: entre 01/06/2026 y 22/06/2026
-                fecha_vencimiento_inicio = datetime(2026, 6, 1).date()
-                fecha_vencimiento_fin = datetime(2026, 6, 22).date()
+                # Vencimiento: entre 01/01/2026 y 19/01/2026
+                fecha_vencimiento_inicio = datetime(2026, 1, 1).date()
+                fecha_vencimiento_fin = datetime(2026, 1, 19).date()
                 
                 print(f"Filtro de período: 2026")
                 print(f"Filtro de vencimiento: desde {fecha_vencimiento_inicio} hasta {fecha_vencimiento_fin}")
@@ -1028,7 +1021,7 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
                                             fecha_vencida_valida = True
                                             print(f"  ✓ Fecha de vencimiento válida para anticipos: {fecha_vencimiento}")
                                         else:
-                                            print(f"  ✗ Fecha fuera del rango enero 2026: {fecha_vencimiento}")
+                                            print(f"  ✗ Fecha fuera del rango Mayo 2026: {fecha_vencimiento}")
                                             continue
                                             
                                     except ValueError:
@@ -1418,21 +1411,12 @@ try:
         
         indice += 1
 
-    print("\n" + "="*60)
-    print("✅ PROCESAMIENTO DE TODOS LOS CLIENTES COMPLETADO")
-    print("📊 RESUMEN DE ANTICIPOS:")
-    print("   - Impuesto filtrado: Ganancias Sociedades")
-    print("   - Período filtrado: 2026")
-    print("   - Vencimiento filtrado: 01/01/2026 a 19/02/2026")
-    print("   - Formato de salida: Excel (.xlsx)")
-    print("   - Título de archivos: Anticipos - [Cliente]")
-    print("="*60)
-except Exception as e:
-    print(f"❌ ERROR GENERAL en el procesamiento principal: {e}")
-    import traceback
-    traceback.print_exc()
-
-finally:
-    consolidado_salida = os.path.join(base_dir, "Data", "Anticipos", "Consolidado_Anticipos.xlsx")
-    consolidar_excels_anticipos(os.path.join(base_dir, "Data", "Anticipos"), consolidado_salida)
-    print("✅ Consolidación final ejecutada.")
+print("\n" + "="*60)
+print("✅ PROCESAMIENTO DE TODOS LOS CLIENTES COMPLETADO")
+print("📊 RESUMEN DE ANTICIPOS:")
+print("   - Impuesto filtrado: Ganancias Sociedades")
+print("   - Período filtrado: 2026")
+print("   - Vencimiento filtrado: 01/01/2026 a 19/02/2026")
+print("   - Formato de salida: Excel (.xlsx)")
+print("   - Título de archivos: Anticipos - [Cliente]")
+print("="*60)
