@@ -917,9 +917,9 @@ def exportar_desde_html(ubicacion_descarga, cuit_representado, cliente):
                 print(f"Filtros de impuestos para anticipos: {impuestos_incluir}")
                 
                 # Período: 2026
-                # Vencimiento: entre 01/01/2026 y 19/01/2026
-                fecha_vencimiento_inicio = datetime(2026, 1, 1).date()
-                fecha_vencimiento_fin = datetime(2026, 1, 19).date()
+                # Vencimiento: entre 01/06/2026 y 22/06/2026
+                fecha_vencimiento_inicio = datetime(2026, 6, 1).date()
+                fecha_vencimiento_fin = datetime(2026, 6, 22).date()
                 
                 print(f"Filtro de período: 2026")
                 print(f"Filtro de vencimiento: desde {fecha_vencimiento_inicio} hasta {fecha_vencimiento_fin}")
@@ -1267,6 +1267,115 @@ def obtener_nombre_cliente(filename):
     nombre_cliente = base.split('-')[1].strip()
     return nombre_cliente
 
+
+def consolidar_excels_anticipos(input_folder, output_file):
+    """Analiza todos los archivos .xlsx en la carpeta de anticipos y consolida solo los que tienen datos válidos."""
+    print(f"\n=== CONSOLIDANDO EXCELS DE ANTICIPOS EN: {input_folder} ===")
+
+    if not os.path.isdir(input_folder):
+        print(f"✗ La carpeta no existe: {input_folder}")
+        return None
+
+    excel_files = glob.glob(os.path.join(input_folder, "*.xlsx"))
+    if not excel_files:
+        print("✗ No se encontraron archivos .xlsx en la carpeta de anticipos.")
+        return None
+
+    def normalize_header(header):
+        if not isinstance(header, str):
+            return ''
+        replacements = {
+            'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ü': 'u', 'ñ': 'n',
+            ' ': '', '_': '', '/': '', '-': '', '.': ''
+        }
+        normalized = ''.join(replacements.get(ch, ch) for ch in header.lower().strip())
+        return ''.join(ch for ch in normalized if ch.isalnum())
+
+    required_patterns = ['impuesto', 'periodo', 'vencimiento', 'saldo']
+    standard_columns = {
+        'impuesto': 'Impuesto',
+        'periodo': 'Período',
+        'antcuota': 'Ant/Cuota',
+        'vencimiento': 'Vencimiento',
+        'saldo': 'Saldo',
+        'intresarcitorios': 'Int. Resarcitorios',
+        'intpunitorio': 'Int. Punitorio'
+    }
+
+    filas_consolidadas = []
+    archivos_validos = []
+    archivos_invalidos = []
+
+    for archivo in excel_files:
+        try:
+            df_archivo = pd.read_excel(archivo, sheet_name=0)
+            df_archivo = df_archivo.replace({r'^\s*$': None}, regex=True)
+            df_archivo = df_archivo.dropna(how='all')
+
+            if df_archivo.empty:
+                print(f"  - Ignorando archivo vacío: {os.path.basename(archivo)}")
+                archivos_invalidos.append((archivo, 'Archivo vacío'))
+                continue
+
+            header_map = {normalize_header(col): col for col in df_archivo.columns if isinstance(col, str)}
+            matched_required = []
+            for pattern in required_patterns:
+                if any(pattern in normalized for normalized in header_map.keys()):
+                    matched_required.append(pattern)
+
+            if len(matched_required) < len(required_patterns):
+                print(f"  - Ignorando archivo con columnas faltantes: {os.path.basename(archivo)}")
+                archivos_invalidos.append((archivo, 'Columnas requeridas faltantes'))
+                continue
+
+            matched_cols = {}
+            for normalized, original in header_map.items():
+                for pattern, standard in standard_columns.items():
+                    if pattern in normalized and original not in matched_cols.values():
+                        matched_cols[original] = standard
+                        break
+
+            if not matched_cols:
+                print(f"  - Ignorando archivo sin columnas reconocibles: {os.path.basename(archivo)}")
+                archivos_invalidos.append((archivo, 'Columnas no reconocidas'))
+                continue
+
+            df_archivo = df_archivo.rename(columns=matched_cols)
+
+            # Determinar si hay al menos una fila con datos válidos en las columnas principales
+            principal_cols = [standard_columns[key] for key in required_patterns if standard_columns[key] in df_archivo.columns]
+            df_valido = df_archivo.dropna(subset=principal_cols, how='all')
+
+            if df_valido.empty:
+                print(f"  - Ignorando archivo sin filas de datos válidos: {os.path.basename(archivo)}")
+                archivos_invalidos.append((archivo, 'Sin filas de datos válidos'))
+                continue
+
+            df_valido['ArchivoOrigen'] = os.path.basename(archivo)
+            filas_consolidadas.append(df_valido)
+            archivos_validos.append(archivo)
+            print(f"  - Archivo válido: {os.path.basename(archivo)} | filas: {len(df_valido)}")
+
+        except Exception as e:
+            print(f"  - Error leyendo {os.path.basename(archivo)}: {e}")
+            archivos_invalidos.append((archivo, f'Error lectura: {e}'))
+
+    if filas_consolidadas:
+        df_consolidado = pd.concat(filas_consolidadas, ignore_index=True, sort=False)
+        df_consolidado.to_excel(output_file, index=False, sheet_name='Consolidado Anticipos')
+        print(f"\n✅ Consolidado generado: {output_file}")
+        print(f"  - Archivos válidos: {len(archivos_validos)}")
+        print(f"  - Archivos ignorados: {len(archivos_invalidos)}")
+        print(f"  - Filas totales consolidadas: {len(df_consolidado)}")
+        return output_file
+
+    else:
+        df_vacio = pd.DataFrame(columns=list(standard_columns.values()) + ['ArchivoOrigen'])
+        df_vacio.to_excel(output_file, index=False, sheet_name='Consolidado Anticipos')
+        print(f"\n⚠ No se encontraron archivos con datos válidos. Se creó archivo vacío: {output_file}")
+        return output_file
+
+
 print("=" * 60)
 print("INICIANDO SISTEMA DE EXTRACCIÓN DE ANTICIPOS SCT")
 print("=" * 60)
@@ -1286,34 +1395,44 @@ for ubicacion in download_list:
         except Exception as e:
             print(f"⚠️ Error creando directorio {ubicacion}: {e}")
 
-indice = 0
-for cuit_ingresar, cuit_representado, password, cliente, ubicacion_descarga in zip(cuit_login_list, cuit_represent_list, password_list, clientes_list, download_list):
-    print(f"\n🔄 PROCESANDO CLIENTE {indice + 1}/{len(clientes_list)}")
-    
-    # Validar ubicación de descarga
-    if not ubicacion_descarga or not os.path.exists(ubicacion_descarga):
-        print(f"❌ Error: Ubicación de descarga inválida para {cliente}: {ubicacion_descarga}")
-        actualizar_excel(indice, f"Ubicación descarga inválida: {ubicacion_descarga}")
+try:
+    indice = 0
+    for cuit_ingresar, cuit_representado, password, cliente, ubicacion_descarga in zip(cuit_login_list, cuit_represent_list, password_list, clientes_list, download_list):
+        print(f"\n🔄 PROCESANDO CLIENTE {indice + 1}/{len(clientes_list)}")
+        
+        # Validar ubicación de descarga
+        if not ubicacion_descarga or not os.path.exists(ubicacion_descarga):
+            print(f"❌ Error: Ubicación de descarga inválida para {cliente}: {ubicacion_descarga}")
+            actualizar_excel(indice, f"Ubicación descarga inválida: {ubicacion_descarga}")
+            indice += 1
+            continue
+        
+        # Procesar cliente con ubicación específica
+        exito = procesar_cliente_completo(cuit_ingresar, cuit_representado, password, cliente, ubicacion_descarga, indice)
+        
+        if exito:
+            print(f"✅ Cliente {cliente} completado exitosamente")
+            print(f"📄 Excel de anticipos generado en: {ubicacion_descarga}")
+        else:
+            print(f"❌ Cliente {cliente} falló - ver logs para detalles")
+        
         indice += 1
-        continue
-    
-    # Procesar cliente con ubicación específica
-    exito = procesar_cliente_completo(cuit_ingresar, cuit_representado, password, cliente, ubicacion_descarga, indice)
-    
-    if exito:
-        print(f"✅ Cliente {cliente} completado exitosamente")
-        print(f"📄 Excel de anticipos generado en: {ubicacion_descarga}")
-    else:
-        print(f"❌ Cliente {cliente} falló - ver logs para detalles")
-    
-    indice += 1
 
-print("\n" + "="*60)
-print("✅ PROCESAMIENTO DE TODOS LOS CLIENTES COMPLETADO")
-print("📊 RESUMEN DE ANTICIPOS:")
-print("   - Impuesto filtrado: Ganancias Sociedades")
-print("   - Período filtrado: 2026")
-print("   - Vencimiento filtrado: 01/01/2026 a 19/02/2026")
-print("   - Formato de salida: Excel (.xlsx)")
-print("   - Título de archivos: Anticipos - [Cliente]")
-print("="*60)
+    print("\n" + "="*60)
+    print("✅ PROCESAMIENTO DE TODOS LOS CLIENTES COMPLETADO")
+    print("📊 RESUMEN DE ANTICIPOS:")
+    print("   - Impuesto filtrado: Ganancias Sociedades")
+    print("   - Período filtrado: 2026")
+    print("   - Vencimiento filtrado: 01/01/2026 a 19/02/2026")
+    print("   - Formato de salida: Excel (.xlsx)")
+    print("   - Título de archivos: Anticipos - [Cliente]")
+    print("="*60)
+except Exception as e:
+    print(f"❌ ERROR GENERAL en el procesamiento principal: {e}")
+    import traceback
+    traceback.print_exc()
+
+finally:
+    consolidado_salida = os.path.join(base_dir, "Data", "Anticipos", "Consolidado_Anticipos.xlsx")
+    consolidar_excels_anticipos(os.path.join(base_dir, "Data", "Anticipos"), consolidado_salida)
+    print("✅ Consolidación final ejecutada.")
