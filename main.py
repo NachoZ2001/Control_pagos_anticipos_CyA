@@ -1411,12 +1411,21 @@ try:
         
         indice += 1
 
-print("\n" + "="*60)
-print("✅ PROCESAMIENTO DE TODOS LOS CLIENTES COMPLETADO")
-print("📊 RESUMEN DE ANTICIPOS:")
-print("   - Impuesto filtrado: Ganancias Sociedades")
-print("   - Período filtrado: 2026")
-print("   - Vencimiento filtrado: 01/01/2026 a 19/02/2026")
-print("   - Formato de salida: Excel (.xlsx)")
-print("   - Título de archivos: Anticipos - [Cliente]")
-print("="*60)
+    print("\n" + "="*60)
+    print("✅ PROCESAMIENTO DE TODOS LOS CLIENTES COMPLETADO")
+    print("📊 RESUMEN DE ANTICIPOS:")
+    print("   - Impuesto filtrado: Ganancias Sociedades")
+    print("   - Período filtrado: 2026")
+    print("   - Vencimiento filtrado: 01/01/2026 a 19/02/2026")
+    print("   - Formato de salida: Excel (.xlsx)")
+    print("   - Título de archivos: Anticipos - [Cliente]")
+    print("="*60)
+except Exception as e:
+    print(f"❌ ERROR GENERAL en el procesamiento principal: {e}")
+    import traceback
+    traceback.print_exc()
+
+finally:
+    consolidado_salida = os.path.join(base_dir, "Data", "Anticipos", "Consolidado_Anticipos.xlsx")
+    consolidar_excels_anticipos(os.path.join(base_dir, "Data", "Anticipos"), consolidado_salida)
+    print("✅ Consolidación final ejecutada.")
